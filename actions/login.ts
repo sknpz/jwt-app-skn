@@ -1,38 +1,27 @@
 'use server';
 
+import axios from 'axios';
 import publicApi from '@/lib/api';
-import { cookies } from 'next/headers';
+import { setSessionTokens } from '@/lib/session';
 import { redirect } from 'next/navigation';
 
 
 export async function login( _prevState: {error:null|string}, formData: FormData) {
   const email = formData.get('email');
   const password = formData.get('password');
-  console.log('login action', email, password);
-    try {
+  try {
     const res = await publicApi.post(`/auth/login`, {
-        email,
-        password
+      email,
+      password
     });
-    
-    const token = res.data.token;
-
-    const cookieStore = await cookies();          // ← await no Next 15/16
-    cookieStore.set('token', token, {
-        httpOnly: true,                             // ← JS não lê o token
-        secure: true,
-        sameSite: 'lax',
-        path: '/',
-        maxAge: 60 * 15,                            // ← 15 minutos (exp curto)
-    });
-
-  
-    }catch (error: any) {
-        console.error('Login error:', error);
-        return {
-            error: error.response?.data?.message || 'Erro ao fazer login',
-        };
+    await setSessionTokens(res.data.accessToken, res.data.refreshToken);
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response) {
+      return { error: error.response.data?.error || 'Erro ao fazer login' };
     }
+    return { error: 'Não foi possível conectar à API. Ela está rodando?' };
+  }
 
-      redirect('/dashboard');
+  // Fora do try: o redirect funciona lançando um erro interno do Next.
+  redirect('/dashboard');
 }
