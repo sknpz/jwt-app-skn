@@ -39,7 +39,7 @@ export default function Dashboard() {
     <>
       <h1>Dashboard</h1>
       {/* Os relatórios são só do administrador (a API responde 403 para atendente). */}
-      {user.isAdmin ? <AdminCards /> : <p>Olá, {user.name}. Use o menu acima para atender os leitores.</p>}
+      {user && (user.isAdmin ? <AdminCards /> : <p>Olá, {user.name}. Use o menu acima para atender os leitores.</p>)}
     </>
   );
 }

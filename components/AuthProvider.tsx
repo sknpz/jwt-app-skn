@@ -5,7 +5,8 @@ import api, { getErrorMessage } from '@/lib/http';
 import type { User } from '@/lib/types';
 
 type AuthContextValue = {
-  user: User;
+  user: User | null; // null enquanto o /auth/me não respondeu
+  error: string | null;
   logout: () => Promise<void>;
 };
 
@@ -30,13 +31,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .catch((requestError) => setError(getErrorMessage(requestError, 'Não foi possível carregar a sessão')));
   }, []);
 
-  if (error) {
-    return <p className="alert alert-error page-message">{error}</p>;
-  }
-  if (!user) {
-    return <p className="page-message">Carregando...</p>;
-  }
-  return <AuthContext.Provider value={{ user, logout }}>{children}</AuthContext.Provider>;
+  // As telas são sempre renderizadas, mesmo antes de o usuário carregar: o Next
+  // precisa delas para validar a navegação, e a estrutura da página aparece na hora.
+  return <AuthContext.Provider value={{ user, error, logout }}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
