@@ -1,25 +1,45 @@
-import publicApi from "@/lib/api";
-import { cookies } from "next/headers";
+'use client';
 
-export default async function Dashboard() {
-    const cookieStore = await cookies();
-    const res = await publicApi.get('/user', {
-        headers: {
-            Authorization: `Bearer ${cookieStore.get('token')?.value}`,
-        },
-    });
-    const users = res.data;
+import { useEffect, useState } from 'react';
+import { useAuth } from '@/components/AuthProvider';
+import { formatCurrency } from '@/lib/format';
+import api, { getErrorMessage } from '@/lib/http';
+import type { DashboardReport } from '@/lib/types';
+
+function AdminCards() {
+  const [report, setReport] = useState<DashboardReport | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    api.get<DashboardReport>('/reports/dashboard')
+      .then((response) => setReport(response.data))
+      .catch((requestError) => setError(getErrorMessage(requestError)));
+  }, []);
+
+  if (error) {
+    return <p className="alert alert-error">{error}</p>;
+  }
+  if (!report) {
+    return <p>Carregando...</p>;
+  }
   return (
-    <main style={{ maxWidth: 380, margin: '80px auto' }}>
-      <ul>
-        {users.map((user: any) => (
-          <li key={user.id}>
-            {user.name} - {user.email}
-          </li>
-        ))}
-      </ul>
-    </main>
+    <div className="cards">
+      <div className="card"><span className="card-label">Livros</span><strong className="card-value">{report.totalBooks}</strong></div>
+      <div className="card"><span className="card-label">Empréstimos ativos</span><strong className="card-value">{report.activeLoans}</strong></div>
+      <div className="card"><span className="card-label">Atrasados</span><strong className="card-value">{report.overdueLoans}</strong></div>
+      <div className="card"><span className="card-label">Multas</span><strong className="card-value">{formatCurrency(report.totalFines)}</strong></div>
+    </div>
   );
+}
 
-;
+export default function Dashboard() {
+  const { user } = useAuth();
+
+  return (
+    <>
+      <h1>Dashboard</h1>
+      {/* Os relatórios são só do administrador (a API responde 403 para atendente). */}
+      {user.isAdmin ? <AdminCards /> : <p>Olá, {user.name}. Use o menu acima para atender os leitores.</p>}
+    </>
+  );
 }

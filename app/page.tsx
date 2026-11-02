@@ -10,20 +10,26 @@ export default function LoginPage() {
   })
 
   const {  error } = state
-  
+
   return (
-    <main style={{ maxWidth: 380, margin: '80px auto' }}>
+    <main className="login">
       <h1>Entrar na plataforma</h1>
 
-      <form action={formAction}>
-        <label htmlFor="email">E-mail</label>
-        <input id="email" name="email" type="email" required />
+      <form action={formAction} className="form">
+        <label className="field">
+          E-mail
+          <input name="email" type="email" required autoFocus />
+        </label>
 
-        <label htmlFor="password">Senha</label>
-        <input id="password" name="password" type="password" required />
+        <label className="field">
+          Senha
+          <input name="password" type="password" required />
+        </label>
 
-        <button disabled={isPending} type="submit">Entrar</button>
-        {error && <p style={{ color: 'red' }}>{error}</p>}
+        {error && <p className="alert alert-error" role="alert">{error}</p>}
+        <button disabled={isPending} type="submit" className="btn btn-unipar">
+          {isPending ? 'Entrando...' : 'Entrar'}
+        </button>
       </form>
     </main>
   );
